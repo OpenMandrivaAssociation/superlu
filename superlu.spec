@@ -17,7 +17,6 @@ Patch4:         superlu-dont-opt-away.diff
 Patch5:         superlu-initialize.diff
 BuildRequires:	gcc-gfortran, blas-devel
 BuildRequires:	tcsh
-BuildRoot:      %{_tmppath}/%{name}-%{version}-buildroot
 
 %description
 SuperLU is an algorithm that uses group theory to optimize LU
