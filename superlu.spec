@@ -1,6 +1,6 @@
 %define oname SuperLU
 
-Summary:        SuperLU is a matrix solver
+Summary:        Matrix solver
 Name:           superlu
 Version:        3.0
 Release:        %mkrel 2
