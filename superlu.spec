@@ -3,7 +3,7 @@
 Summary:        Matrix solver
 Name:           superlu
 Version:        3.0
-Release:        %mkrel 3
+Release:        %mkrel 5
 License:        BSD
 Group:          Development/C
 URL:            http://crd.lbl.gov/~xiaoye/SuperLU/
