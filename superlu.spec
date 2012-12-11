@@ -1,64 +1,83 @@
+%define major 4
+%define libname %mklibname superlu %major
+%define develname %mklibname superlu -d
+
 %define oname SuperLU
+%define Werror_cflags %nil
 
 Summary:        Matrix solver
 Name:           superlu
-Version:        3.0
-Release:        %mkrel 7
+Version:        4.3
+Release:        %mkrel 6
 License:        BSD
 Group:          Development/C
 URL:            http://crd.lbl.gov/~xiaoye/SuperLU/
-Source:         http://crd.lbl.gov/~xiaoye/SuperLU/%{name}_%{version}.tar.bz2
-Source1:        superlu_ug.ps.gz
-Patch0:		superlu-3.0-makefile.patch
-Patch1:		superlu-3.0-i586-make.inc.patch
-Patch2:		superlu-3.0-x86_64-make.inc.patch
-Patch3:         superlu-overflow.patch
-Patch4:         superlu-dont-opt-away.diff
-Patch5:         superlu-initialize.diff
+Source0:        http://crd.lbl.gov/~xiaoye/SuperLU/%{name}_%{version}.tar.gz
 BuildRequires:	gcc-gfortran, blas-devel
 BuildRequires:	tcsh
-BuildRoot:      %{_tmppath}/%{name}-%{version}-buildroot
+# Build with -fPIC
+Patch0:		%{oname}-add-fpic.patch
+# Build shared library
+Patch1:		%{oname}-build-shared-lib3.patch
 
 %description
 SuperLU is an algorithm that uses group theory to optimize LU
 decomposition of sparse matrices. It's the fastest direct solver for
 linear systems that the author is aware of.
 
+
+%package -n     %{libname}
+Summary:        Shared library for SuperLU
+Group:          System/Libraries
+Obsoletes:      %{name} < %{version}-%{release}
+
+%description -n %{libname}
+SuperLU is an algorithm that uses group theory to optimize LU
+decomposition of sparse matrices. It's the fastest direct solver for
+linear systems that the author is aware of.
+
+
+%package -n	%{develname}
+Summary:        Header files and libraries for SuperLU development
+Group:          Development/C
+Requires:       %{libname} = %{version}-%{release}
+Provides:	%{name}-devel = %{version}-%{release}
+Provides:	%{oname}-devel = %{version}-%{release}
+
+%description -n %{develname}
+The %{name}-devel package contains the header files
+and libraries for use with CUnit package.
+
+
 %prep
 %setup -qn %{oname}_%{version}
-%patch0 -p0
+%patch0 -p1
+%patch1 -p1
+chmod a-x SRC/qselect.c 
+cp -p MAKE_INC/make.linux make.inc
+sed -i "s|-O3|$RPM_OPT_FLAGS|" make.inc
+sed -i "s|\$(SUPERLULIB) ||" make.inc
+sed -i "s|\$(HOME)/Codes/%{name}_%{version}|%{_builddir}/%{name}_%{version}|" make.inc
+sed -i "s|-L/usr/lib -lblas|-L%{_libdir}/atlas -lblas|" make.inc
 
-%ifarch x86_64
-%patch2 -p0
-%else
-%patch1 -p0
-%endif
-
-%patch3 -p1
-%patch4 -p1
-%patch5 -p1
+find . -perm 0600 -exec chmod 0644 {} \;
 
 %build
-perl -pi -e "s/CFLAGS=.*/CFLAGS=%{optflags}/" make.inc
-make all
+%make superlulib BLASLIB="$(pkg-config --libs blas)"
 
 %install
-[ "%{buildroot}" != "/" ] && rm -rf %{buildroot}
-
 mkdir -p %{buildroot}%{_libdir}
-mkdir -p %{buildroot}%{_docdir}/%{name}-%{version}
+mkdir -p %{buildroot}%{_includedir}/%{name}
+install -p SRC/libsuperlu.so.%{version} %{buildroot}%{_libdir}
+install -p SRC/*.h %{buildroot}%{_includedir}/%{name}
+chmod -x %{buildroot}%{_includedir}/%{name}/*.h
+cp -Pp SRC/libsuperlu.so %{buildroot}%{_libdir}
 
-install libsuperlu_%{version}.a %{buildroot}%{_libdir}/libsuperlu_%{version}.a
+%files -n %{libname}
+%{_libdir}/libsuperlu.so.*
 
-cp -pf README %{buildroot}%{_docdir}/%{name}-%{version}/README
-cp -pf %{SOURCE1} %{buildroot}%{_docdir}/%{name}-%{version}/
-cp -ax EXAMPLE %{buildroot}%{_docdir}/%{name}-%{version}/
-cp -ax FORTRAN %{buildroot}%{_docdir}/%{name}-%{version}/
-
-%clean 
-[ "%{buildroot}" != "/" ] && rm -rf %{buildroot}
-
-%files
-%defattr(644,root,root,755)
-%doc %{_docdir}/%{name}-%{version}/*
-%{_libdir}/*.a
+%files -n %{develname}
+%doc README
+%doc DOC
+%{_includedir}/%{name}/
+%{_libdir}/libsuperlu.so
