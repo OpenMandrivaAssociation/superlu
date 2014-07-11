@@ -8,7 +8,7 @@
 Summary:        Matrix solver
 Name:           superlu
 Version:        4.3
-Release:        7
+Release:        8
 License:        BSD
 Group:          Development/C
 URL:            http://crd.lbl.gov/~xiaoye/SuperLU/
