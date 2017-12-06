@@ -57,7 +57,7 @@ and libraries for use with CUnit package.
 %prep
 %setup -qn %{oname}_%{version}
 #patch0 -p1
-%patch1 -p1
+#patch1 -p1
 %patch2 -p1
 %patch3 -p1
 find . -type f | sed -e "/TESTING/d" | xargs chmod a-x
