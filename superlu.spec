@@ -7,14 +7,15 @@
 
 Summary:        Matrix solver
 Name:           superlu
-Version:        4.3
-Release:        10
+Version:        5.2.1
+Release:        1
 License:        BSD
 Group:          Development/C
 URL:            http://crd.lbl.gov/~xiaoye/SuperLU/
 Source0:        http://crd.lbl.gov/~xiaoye/SuperLU/%{name}_%{version}.tar.gz
 Source1:        %{name}.rpmlintrc
-BuildRequires:	gcc-gfortran, libatlas-devel
+BuildRequires:	gcc-gfortran
+BuildRequires:	libatlas-devel
 BuildRequires:	tcsh
 # Build with -fPIC
 Patch0:		%{oname}-add-fpic.patch
@@ -96,10 +97,10 @@ done
 popd
 
 %files -n %{libname}
-%doc README
 %{_libdir}/libsuperlu.so.*
 
 %files -n %{develname}
 %doc DOC
+%doc README
 %{_includedir}/%{oname}/
 %{_libdir}/libsuperlu.so
