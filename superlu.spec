@@ -1,4 +1,4 @@
-%define major 4
+%define major 5
 %define libname %mklibname superlu %major
 %define develname %mklibname superlu -d
 %define __noautoreq 'libsatlas\\.so\\.(.*)|libtatlas\\.so\\.(.*)'
@@ -18,13 +18,14 @@ BuildRequires:	gcc-gfortran
 BuildRequires:	libatlas-devel
 BuildRequires:	tcsh
 # Build with -fPIC
-Patch0:		%{oname}-add-fpic.patch
+Patch0:		%{name}-5x-add-fpic.patch
 # Build shared library
-Patch1:		%{oname}-build-shared-lib3.patch
-# Fixes FTBFS if "-Werror=format-security" flag is used (#1037343)
-Patch2:		%{oname}-fix-format-security.patch
+Patch1:		%{name}-5x-build-shared-lib3.patch
 # Fixes testsuite
-Patch3:		%{oname}-fix-testsuite.patch
+Patch3:		%{name}-5x-fix-testsuite.patch
+# remove non-free mc64 functionality
+# patch obtained from the debian package
+Patch4:		%{name}-removemc64.patch
 
 %description
 SuperLU contains a set of subroutines to solve a sparse linear system 
@@ -56,10 +57,10 @@ and libraries for use with CUnit package.
 
 %prep
 %setup -qn %{oname}_%{version}
-#patch0 -p1
-#patch1 -p1
-#patch2 -p1
-#patch3 -p1
+%patch0 -p1
+%patch1 -p1
+%patch3 -p1
+%patch4
 find . -type f | sed -e "/TESTING/d" | xargs chmod a-x
 # Remove the shippped executables from EXAMPLE
 find EXAMPLE -type f | while read file
@@ -67,16 +68,17 @@ do
    [ "$(file $file | awk '{print $2}')" = ELF ] && rm $file || :
 done
 cp -p MAKE_INC/make.linux make.inc
-sed -i	-e "s|-O3|$RPM_OPT_FLAGS|"							\
+sed -i	-e "s|-O3|%{optflags}|"							\
 	-e "s|\$(SUPERLULIB) ||"							\
-	-e "s|\$(HOME)/Codes/%{oname}_%{version}|%{_builddir}/%{oname}_%{version}|"	\
-	-e 's!lib/libsuperlu_4.3.a$!SRC/libsuperlu.so!'					\
+	-e "s|\$(HOME)/Dropbox/Codes/%{name}/%{name}|%{_builddir}/%{name}_%{version}|"	\
+	-e 's!lib/libsuperlu_5.1.a$!SRC/libsuperlu.so!'					\
 	-e 's!-shared!& %{ldflags}!'							\
 	-e "s|-L/usr/lib -lblas|-L%{_libdir}/atlas -lsatlas|"				\
 	make.inc
 
 %build
-make %{?_smp_mflags} superlulib
+%setup_compile_flags
+make CC=%{__cc} CXX=%{__cxx} %{?_smp_mflags} superlulib
 make -C TESTING
 
 %install
