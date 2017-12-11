@@ -72,7 +72,7 @@ cp -p MAKE_INC/make.linux make.inc
 sed -i	-e "s|-O3|%{optflags}|"							\
 	-e "s|\$(SUPERLULIB) ||"							\
 	-e "s|\$(HOME)/Dropbox/Codes/%{name}/%{name}|%{_builddir}/%{name}_%{version}|"	\
-	-e 's!lib/libsuperlu_5.2.a$!SRC/libsuperlu.so!'					\
+	-e 's!lib/libsuperlu_5.1.a$!SRC/libsuperlu.so!'					\
 	-e 's!-shared!& %{ldflags}!'							\
 	-e "s|-L/usr/lib -lblas|-L%{_libdir}/atlas -lsatlas|"				\
 	make.inc
