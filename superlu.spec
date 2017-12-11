@@ -81,8 +81,8 @@ sed -i	-e "s|-O3|%{optflags}|"							\
 
 %build
 %setup_compile_flags
-%cmake -DCMAKE_BUILD_TYPE=Release -DUSE_XSDK_DEFAULTS='TRUE' -Denable_tests=OFF
-%make -C build
+%cmake -DCMAKE_BUILD_TYPE=Release -DUSE_XSDK_DEFAULTS='FALSE' -Denable_tests=OFF
+%make
 
 %install
 %makeinstall_std -C build
