@@ -26,6 +26,7 @@ Patch4:		%{name}-removemc64.patch
 BuildRequires:	gcc-gfortran
 BuildRequires:	libatlas-devel
 BuildRequires:	tcsh
+BuildRequires:	cmake
 
 %description
 SuperLU contains a set of subroutines to solve a sparse linear system 
@@ -72,7 +73,7 @@ cp -p MAKE_INC/make.linux make.inc
 sed -i	-e "s|-O3|%{optflags}|"							\
 	-e "s|\$(SUPERLULIB) ||"							\
 	-e "s|\$(HOME)/Dropbox/Codes/%{name}/%{name}|%{_builddir}/%{name}_%{version}|"	\
-	-e "s|SuperLUroot.*|SuperLUroot = %{_builddir}/%{name}_%{version}|"		\
+	-e 's|SuperLUroot.*|SuperLUroot = "%{_builddir}/%{name}_%{version}"|'		\
 	-e 's!lib/libsuperlu_5.1.a$!SRC/libsuperlu.so!'					\
 	-e 's!-shared!& %{ldflags}!'							\
 	-e "s|-L/usr/lib -lblas|-L%{_libdir}/atlas -lsatlas|"				\
@@ -80,28 +81,41 @@ sed -i	-e "s|-O3|%{optflags}|"							\
 
 %build
 %setup_compile_flags
-make CC=%{__cc} CXX=%{__cxx} %{?_smp_mflags} superlulib
-make -C TESTING
+%cmake -DCMAKE_BUILD_TYPE=Release -DUSE_XSDK_DEFAULTS='TRUE' -Denable_tests=OFF
+%make -C build
 
 %install
-mkdir -p %{buildroot}%{_libdir}
-mkdir -p %{buildroot}%{_includedir}/%{oname}
-install -p SRC/libsuperlu.so.%{version} %{buildroot}%{_libdir}
-install -p SRC/*.h %{buildroot}%{_includedir}/%{oname}
-chmod -x %{buildroot}%{_includedir}/%{oname}/*.h
-cp -Pp SRC/libsuperlu.so %{buildroot}%{_libdir}
+%makeinstall_std -C build
+
+#mkdir -p %{buildroot}%{_libdir}
+#mkdir -p %{buildroot}%{_includedir}/%{oname}
+#install -p SRC/libsuperlu.so.%{version} %{buildroot}%{_libdir}
+#install -p SRC/*.h %{buildroot}%{_includedir}/%{oname}
+#chmod -x %{buildroot}%{_includedir}/%{oname}/*.h
+#cp -Pp SRC/libsuperlu.so %{buildroot}%{_libdir}
+
+#fix permissions
+chmod 644 MATLAB/*
+
+# remove all build examples
+cd EXAMPLE
+make clean
+rm -rf *itersol*
+cd ..
+mv EXAMPLE examples
+cp FORTRAN/README README.fortran
 
 %check
-pushd TESTING
-for _test in c d s z
-do
-  chmod +x ${_test}test.csh
-  ./${_test}test.csh
+ln -s examples/ EXAMPLE
+export LD_LIBRARY_PATH=%{buildroot}%{_libdir}
+make testing
+echo -ne "\nTest results\n"
+for i in stest dtest ctest ztest; do
+    cat TESTING/$i.out
 done
-popd
 
 %files -n %{libname}
-%{_libdir}/libsuperlu.so.*
+%{_libdir}/libsuperlu.so.%{major}*
 
 %files -n %{develname}
 %doc DOC
