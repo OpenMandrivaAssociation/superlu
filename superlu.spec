@@ -14,9 +14,6 @@ Group:          Development/C
 URL:            http://crd.lbl.gov/~xiaoye/SuperLU/
 Source0:        http://crd.lbl.gov/~xiaoye/SuperLU/%{name}_%{version}.tar.gz
 Source1:        %{name}.rpmlintrc
-BuildRequires:	gcc-gfortran
-BuildRequires:	libatlas-devel
-BuildRequires:	tcsh
 # Build with -fPIC
 Patch0:		%{name}-5x-add-fpic.patch
 # Build shared library
@@ -26,6 +23,9 @@ Patch3:		%{name}-5x-fix-testsuite.patch
 # remove non-free mc64 functionality
 # patch obtained from the debian package
 Patch4:		%{name}-removemc64.patch
+BuildRequires:	gcc-gfortran
+BuildRequires:	libatlas-devel
+BuildRequires:	tcsh
 
 %description
 SuperLU contains a set of subroutines to solve a sparse linear system 
@@ -61,6 +61,7 @@ and libraries for use with CUnit package.
 %patch1 -p1
 %patch3 -p1
 %patch4
+
 find . -type f | sed -e "/TESTING/d" | xargs chmod a-x
 # Remove the shippped executables from EXAMPLE
 find EXAMPLE -type f | while read file
@@ -71,7 +72,7 @@ cp -p MAKE_INC/make.linux make.inc
 sed -i	-e "s|-O3|%{optflags}|"							\
 	-e "s|\$(SUPERLULIB) ||"							\
 	-e "s|\$(HOME)/Dropbox/Codes/%{name}/%{name}|%{_builddir}/%{name}_%{version}|"	\
-	-e 's!lib/libsuperlu_5.1.a$!SRC/libsuperlu.so!'					\
+	-e 's!lib/libsuperlu_5.2.a$!SRC/libsuperlu.so!'					\
 	-e 's!-shared!& %{ldflags}!'							\
 	-e "s|-L/usr/lib -lblas|-L%{_libdir}/atlas -lsatlas|"				\
 	make.inc
