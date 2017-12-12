@@ -2,7 +2,7 @@
 %define libname %mklibname superlu %major
 %define develname %mklibname superlu -d
 %define __noautoreq 'libsatlas\\.so\\.(.*)|libtatlas\\.so\\.(.*)'
-
+%define _disable_lto 1
 %define oname SuperLU
 
 Summary:        Matrix solver
