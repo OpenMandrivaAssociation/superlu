@@ -82,7 +82,7 @@ sed -i	-e "s|-O3|%{optflags}|"							\
 
 %build
 %setup_compile_flags
-%cmake -DCMAKE_BUILD_TYPE=Release -DUSE_XSDK_DEFAULTS='FALSE' -Denable_tests=OFF
+%cmake -DCMAKE_BUILD_TYPE=Release -Denable_blaslib=ON -DUSE_XSDK_DEFAULTS='FALSE' -Denable_tests=OFF
 %make
 
 %install
@@ -121,5 +121,5 @@ done
 %files -n %{develname}
 %doc DOC
 %doc README
-%{_includedir}/%{oname}/
+%{_includedir}/*.h
 %{_libdir}/libsuperlu.so
