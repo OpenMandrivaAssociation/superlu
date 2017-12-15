@@ -25,7 +25,7 @@ Patch3:		%{name}-5x-fix-testsuite.patch
 # patch obtained from the debian package
 Patch4:		%{name}-removemc64.patch
 BuildRequires:	gcc-gfortran
-BuildRequires:	libatlas-devel
+BuildRequires:	blas-devel
 BuildRequires:	tcsh
 BuildRequires:	cmake
 
