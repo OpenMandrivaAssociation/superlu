@@ -80,9 +80,14 @@ sed -i	-e "s|-O3|%{optflags}|"							\
 	-e "s|-L/usr/lib -lblas|-L%{_libdir}/atlas -lsatlas|"				\
 	make.inc
 
+# Change optimization level
+sed -i.bak '/NOOPTS/d' make.inc.in
+sed -e 's|-O0|-O2|g' -i SRC/CMakeLists.txt
+
 %build
 %setup_compile_flags
-%cmake -DCMAKE_BUILD_TYPE=Release -Denable_blaslib=ON -DUSE_XSDK_DEFAULTS='FALSE' -Denable_tests=OFF
+%cmake -DCMAKE_BUILD_TYPE=Release -Denable_blaslib:BOOL=OFF -DUSE_XSDK_DEFAULTS='FALSE' -Denable_tests=OFF
+
 %make_build
 
 %install
