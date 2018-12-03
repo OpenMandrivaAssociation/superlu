@@ -1,7 +1,7 @@
 %define major 5
 %define libname %mklibname superlu %major
 %define develname %mklibname superlu -d
-%define __noautoreq 'libsatlas\\.so\\.(.*)|libtatlas\\.so\\.(.*)'
+%global __requires_exclude devel\\(libsatlas
 %define _disable_lto 1
 %define _disable_ld_no_undefined 1
 %define oname SuperLU
@@ -9,7 +9,7 @@
 Summary:        Matrix solver
 Name:           superlu
 Version:        5.2.1
-Release:        2
+Release:        3
 License:        BSD
 Group:          Development/C
 URL:            http://crd.lbl.gov/~xiaoye/SuperLU/
@@ -83,10 +83,10 @@ sed -i	-e "s|-O3|%{optflags}|"							\
 %build
 %setup_compile_flags
 %cmake -DCMAKE_BUILD_TYPE=Release -Denable_blaslib=ON -DUSE_XSDK_DEFAULTS='FALSE' -Denable_tests=OFF
-%make
+%make_build
 
 %install
-%makeinstall_std -C build
+%make_install -C build
 
 #mkdir -p %{buildroot}%{_libdir}
 #mkdir -p %{buildroot}%{_includedir}/%{oname}
