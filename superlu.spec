@@ -6,10 +6,15 @@
 %define _disable_ld_no_undefined 1
 %define oname SuperLU
 
+%global optflags %{optflags} -O3
+
+# (tpg) enable PGO build
+%bcond_without pgo
+
 Summary:        Matrix solver
 Name:           superlu
 Version:        5.2.1
-Release:        3
+Release:        4
 License:        BSD
 Group:          Development/C
 URL:            http://crd.lbl.gov/~xiaoye/SuperLU/
@@ -83,10 +88,33 @@ sed -i	-e "s|-O3|%{optflags}|"							\
 
 # Change optimization level
 sed -i.bak '/NOOPTS/d' make.inc.in
-sed -e 's|-O0|-O2|g' -i SRC/CMakeLists.txt
+sed -e 's|-O0|-O3|g' -i SRC/CMakeLists.txt
 
 %build
 %setup_compile_flags
+%if %{with pgo}
+export LLVM_PROFILE_FILE=%{name}-%p.profile.d
+export LD_LIBRARY_PATH="$(pwd)"
+CFLAGS="%{optflags} -fprofile-instr-generate" \
+CXXFLAGS="%{optflags} -fprofile-instr-generate" \
+FFLAGS="$CFLAGS_PGO" \
+FCFLAGS="$CFLAGS_PGO" \
+LDFLAGS="%{ldflags} -fprofile-instr-generate" \
+%cmake -DCMAKE_BUILD_TYPE=Release -Denable_blaslib:BOOL=OFF -DUSE_XSDK_DEFAULTS='FALSE' -Denable_tests=OFF
+
+%make_build
+make testing
+
+unset LD_LIBRARY_PATH
+unset LLVM_PROFILE_FILE
+llvm-profdata merge --output=%{name}.profile *.profile.d
+
+make clean
+
+CFLAGS="%{optflags} -fprofile-instr-use=$(realpath %{name}.profile)" \
+CXXFLAGS="%{optflags} -fprofile-instr-use=$(realpath %{name}.profile)" \
+LDFLAGS="%{ldflags} -fprofile-instr-use=$(realpath %{name}.profile)" \
+%endif
 %cmake -DCMAKE_BUILD_TYPE=Release -Denable_blaslib:BOOL=OFF -DUSE_XSDK_DEFAULTS='FALSE' -Denable_tests=OFF
 
 %make_build
