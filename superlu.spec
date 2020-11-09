@@ -1,81 +1,84 @@
 %define major 5
-%define libname %mklibname superlu %major
-%define develname %mklibname superlu -d
-%global __requires_exclude devel\\(libsatlas
-%define _disable_lto 1
-%define _disable_ld_no_undefined 1
+%define libname %mklibname superlu %{major}
+%define devname %mklibname superlu -d
+%define _disable_ld_no_undefined %nil
+
 %define oname SuperLU
+%define Werror_cflags %{nil}
 
-%global optflags %{optflags} -O3
-
-# (tpg) enable PGO build
-%bcond_without pgo
-
-Summary:        Matrix solver
-Name:           superlu
-Version:        5.2.1
-Release:        4
-License:        BSD
-Group:          Development/C
-URL:            http://crd.lbl.gov/~xiaoye/SuperLU/
-Source0:        http://crd.lbl.gov/~xiaoye/SuperLU/%{name}_%{version}.tar.gz
-Source1:        %{name}.rpmlintrc
+Summary:	Matrix solver
+Name:		superlu
+Version:	5.2.2
+Release:	1
+License:	BSD
+Group:		Development/C
+Url:		http://crd.lbl.gov/~xiaoye/SuperLU/
+Source0:	https://github.com/xiaoyeli/superlu/archive/v%{version}.tar.gz
+BuildRequires:	gcc-gfortran
+BuildRequires:	tcsh
+BuildRequires:	pkgconfig(blas)
+BuildRequires:	cmake
 # Build with -fPIC
 Patch0:		%{name}-5x-add-fpic.patch
 # Build shared library
 Patch1:		%{name}-5x-build-shared-lib3.patch
 # Fixes testsuite
 Patch3:		%{name}-5x-fix-testsuite.patch
+#Patch4:		https://data.gpo.zugaina.org/gentoo/sci-libs/superlu/files/superlu-5.2.2-no-internal-blas.patch
 # remove non-free mc64 functionality
 # patch obtained from the debian package
-Patch4:		%{name}-removemc64.patch
-BuildRequires:	gcc-gfortran
-BuildRequires:	blas-devel
-BuildRequires:	libatlas-devel
-BuildRequires:	tcsh
-BuildRequires:	cmake
+#Patch4:		%{name}-removemc64.patch
 
 %description
-SuperLU contains a set of subroutines to solve a sparse linear system 
-A*X=B. It uses Gaussian elimination with partial pivoting (GEPP). 
-The columns of A may be preordered before factorization; the 
-preordering for sparsity is completely separate from the factorization.
+SuperLU is an algorithm that uses group theory to optimize LU
+decomposition of sparse matrices. It's the fastest direct solver for
+linear systems that the author is aware of.
 
-%package -n     %{libname}
-Summary:        Shared library for SuperLU
-Group:          System/Libraries
-Obsoletes:      %{name} < %{version}-%{release}
+#----------------------------------------------------------------------------
+
+%package -n %{libname}
+Summary:	Shared library for SuperLU
+Group:		System/Libraries
 
 %description -n %{libname}
-SuperLU contains a set of subroutines to solve a sparse linear system 
-A*X=B. It uses Gaussian elimination with partial pivoting (GEPP). 
-The columns of A may be preordered before factorization; the 
-preordering for sparsity is completely separate from the factorization.
+SuperLU is an algorithm that uses group theory to optimize LU
+decomposition of sparse matrices. It's the fastest direct solver for
+linear systems that the author is aware of.
 
-%package -n	%{develname}
-Summary:        Header files and libraries for SuperLU development
-Group:          Development/C
-Requires:       %{libname} = %{version}-%{release}
-Provides:	%{name}-devel = %{version}-%{release}
-Provides:	%{oname}-devel = %{version}-%{release}
+%files -n %{libname}
+%{_libdir}/libsuperlu.so.%{major}*
 
-%description -n %{develname}
-The %{name}-devel package contains the header files
-and libraries for use with CUnit package.
+#----------------------------------------------------------------------------
+
+%package -n %{devname}
+Summary:	Header files and libraries for SuperLU development
+Group:		Development/C
+Requires:	%{libname} = %{EVRD}
+Provides:	%{name}-devel = %{EVRD}
+Provides:	%{oname}-devel = %{EVRD}
+
+%description -n %{devname}
+Header files and libraries for SuperLU development.
+
+%files -n %{devname}
+%doc README
+%doc DOC
+%{_includedir}/*.h
+%{_libdir}/cmake/superlu/*.cmake
+%{_libdir}/libsuperlu.so
+%{_libdir}/pkgconfig/superlu.pc
+
+#----------------------------------------------------------------------------
 
 %prep
-%setup -qn %{oname}_%{version}
-%patch0 -p1
-%patch1 -p1
-%patch3 -p1
-%patch4
+%setup -q
+%autopatch -p1
+
+# respect user's CFLAGS
+sed -i -e 's/O3//' CMakeLists.txt
 
 find . -type f | sed -e "/TESTING/d" | xargs chmod a-x
-# Remove the shippped executables from EXAMPLE
-find EXAMPLE -type f | while read file
-do
-   [ "$(file $file | awk '{print $2}')" = ELF ] && rm $file || :
-done
+
 cp -p MAKE_INC/make.linux make.inc
 sed -i	-e "s|-O3|%{optflags}|"							\
 	-e "s|\$(SUPERLULIB) ||"							\
@@ -86,49 +89,18 @@ sed -i	-e "s|-O3|%{optflags}|"							\
 	-e "s|-L/usr/lib -lblas|-L%{_libdir}/atlas -lsatlas|"				\
 	make.inc
 
-# Change optimization level
-sed -i.bak '/NOOPTS/d' make.inc.in
-sed -e 's|-O0|-O3|g' -i SRC/CMakeLists.txt
-
 %build
-%setup_compile_flags
-%if %{with pgo}
-export LLVM_PROFILE_FILE=%{name}-%p.profile.d
-export LD_LIBRARY_PATH="$(pwd)"
-CFLAGS="%{optflags} -fprofile-instr-generate" \
-CXXFLAGS="%{optflags} -fprofile-instr-generate" \
-FFLAGS="$CFLAGS_PGO" \
-FCFLAGS="$CFLAGS_PGO" \
-LDFLAGS="%{ldflags} -fprofile-instr-generate" \
-%cmake -DCMAKE_BUILD_TYPE=Release -Denable_blaslib:BOOL=OFF -DUSE_XSDK_DEFAULTS='FALSE' -Denable_tests=OFF
-
-%make_build
-make testing
-
-unset LD_LIBRARY_PATH
-unset LLVM_PROFILE_FILE
-llvm-profdata merge --output=%{name}.profile *.profile.d
-
-make clean
-
-CFLAGS="%{optflags} -fprofile-instr-use=$(realpath %{name}.profile)" \
-CXXFLAGS="%{optflags} -fprofile-instr-use=$(realpath %{name}.profile)" \
-LDFLAGS="%{ldflags} -fprofile-instr-use=$(realpath %{name}.profile)" \
-%endif
-%cmake -DCMAKE_BUILD_TYPE=Release -Denable_blaslib:BOOL=OFF -DUSE_XSDK_DEFAULTS='FALSE' -Denable_tests=OFF
+%set_build_flags
+%cmake -DCMAKE_BUILD_TYPE=Release \
+	-Denable_internal_blaslib:BOOL=OFF \
+	-DUSE_XSDK_DEFAULTS='FALSE' \
+	-Denable_tests=OFF \
+	-DBUILD_SHARED_LIBS=ON
 
 %make_build
 
 %install
 %make_install -C build
-
-#mkdir -p %{buildroot}%{_libdir}
-#mkdir -p %{buildroot}%{_includedir}/%{oname}
-#install -p SRC/libsuperlu.so.%{version} %{buildroot}%{_libdir}
-#install -p SRC/*.h %{buildroot}%{_includedir}/%{oname}
-#chmod -x %{buildroot}%{_includedir}/%{oname}/*.h
-#cp -Pp SRC/libsuperlu.so %{buildroot}%{_libdir}
-
 #fix permissions
 chmod 644 MATLAB/*
 
@@ -139,21 +111,3 @@ rm -rf *itersol*
 cd ..
 mv EXAMPLE examples
 cp FORTRAN/README README.fortran
-
-%check
-ln -s examples/ EXAMPLE
-export LD_LIBRARY_PATH=%{buildroot}%{_libdir}
-make testing
-echo -ne "\nTest results\n"
-for i in stest dtest ctest ztest; do
-    cat TESTING/$i.out
-done
-
-%files -n %{libname}
-%{_libdir}/libsuperlu.so.%{major}*
-
-%files -n %{develname}
-%doc DOC
-%doc README
-%{_includedir}/*.h
-%{_libdir}/libsuperlu.so

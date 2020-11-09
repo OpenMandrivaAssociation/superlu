@@ -1,17 +1,18 @@
-diff -Naur SuperLU_5.2.1/SRC/Makefile SuperLU_5.2.1.tpg/SRC/Makefile
---- SuperLU_5.2.1/SRC/Makefile	2016-05-22 15:58:44.000000000 +0000
-+++ SuperLU_5.2.1.tpg/SRC/Makefile	2017-12-11 18:31:28.147024684 +0000
-@@ -98,7 +98,7 @@
+diff --git a/SRC/Makefile b/SRC/Makefile
+index 2dbd9e5..44a1f87 100644
+--- a/SRC/Makefile
++++ b/SRC/Makefile
+@@ -91,7 +91,7 @@ ZLUSRC = \
  	ilu_zcolumn_dfs.o ilu_zpanel_dfs.o ilu_zcopy_to_ucol.o \
  	ilu_zpivotL.o zdiagonal.o zlacon2.o dzsum1.o izmax1.o
  
 -all:    single double complex complex16
 +all:    sharedlib
  
- single: $(SLUSRC) $(ALLAUX) $(SCAUX)
- 	$(ARCH) $(ARCHFLAGS) $(SUPERLULIB) $(SLUSRC) $(ALLAUX) $(SCAUX)
-@@ -116,10 +116,16 @@
- 	$(ARCH) $(ARCHFLAGS) $(SUPERLULIB) $(ZLUSRC) $(ALLAUX) $(DZLAUX)
+ single: $(SLUSRC) $(ALLAUX)
+ 	$(ARCH) $(ARCHFLAGS) $(SUPERLULIB) $(SLUSRC) $(ALLAUX)
+@@ -109,10 +109,16 @@ complex16: $(ZLUSRC) $(ALLAUX)
+ 	$(ARCH) $(ARCHFLAGS) $(SUPERLULIB) $(ZLUSRC) $(ALLAUX)
  	$(RANLIB) $(SUPERLULIB)
  
 +sharedlib: $(ALLAUX) $(LAAUX) $(SLASRC) $(DLASRC) $(CLASRC) $(ZLASRC) $(SCLAUX) $(DZLAUX) $(SLUSRC) $(DLUSRC) $(CLUSRC) $(ZLUSRC)
