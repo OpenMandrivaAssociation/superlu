@@ -8,7 +8,7 @@
 
 Summary:	Matrix solver
 Name:		superlu
-Version:	5.2.2
+Version:	5.3.0
 Release:	1
 License:	BSD
 Group:		Development/C
