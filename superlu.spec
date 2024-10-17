@@ -12,7 +12,7 @@ Version:	5.3.0
 Release:	2
 License:	BSD
 Group:		Development/C
-Url:		http://crd.lbl.gov/~xiaoye/SuperLU/
+Url:		https://crd.lbl.gov/~xiaoye/SuperLU/
 Source0:	https://github.com/xiaoyeli/superlu/archive/v%{version}.tar.gz
 BuildRequires:	gcc-gfortran
 BuildRequires:	tcsh
